@@ -6,13 +6,26 @@
 //
 
 import SwiftUI
+import PDFKit
 
-struct PDFKitView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+struct PDFKitView: NSViewRepresentable {
+    let document: PDFDocument
+
+    func makeNSView(context: Context) -> PDFView {
+        let pdfView = PDFView()
+        pdfView.autoScales = true
+        pdfView.document = document
+        return pdfView
+    }
+
+    func updateNSView(_ nsView: PDFView, context: Context) {
+        nsView.document = document
     }
 }
 
+
+
 #Preview {
-    PDFKitView()
+    let pdfURL = PDFDocument(url:  FileManager.default.temporaryDirectory.appendingPathComponent("dic.pdf"))
+    PDFKitView(document: pdfURL!)
 }
