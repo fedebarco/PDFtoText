@@ -14,8 +14,8 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            if pdfViewModel.pdfDocument != nil {
-                PDFMainView(pdfViewModel: pdfViewModel)
+            if let pdfDocument = pdfViewModel.pdfDocument, pdfDocument.pageCount > 0 {
+                PDFMainView(pdfViewModel: pdfViewModel,pdfDocument: pdfDocument)
                     
             } else {
                 VStack {
@@ -49,6 +49,13 @@ struct ContentView: View {
                 queue: .main
             ) { _ in
                 pdfViewModel.openPDFPicker()
+            }
+            NotificationCenter.default.addObserver(
+                forName: NSNotification.Name("GoStart"),
+                object: nil,
+                queue: .main
+            ) { _ in
+                pdfViewModel.resetDocument()
             }
         }
     }

@@ -9,6 +9,7 @@ import Foundation
 import PDFKit
 import SwiftUI
 import Vision
+import UniformTypeIdentifiers
 
 class PDFViewModel: ObservableObject {
     @Published var pdfDocument: PDFDocument?
@@ -47,6 +48,15 @@ class PDFViewModel: ObservableObject {
         }
     }
     
+    // En tu PDFViewModel
+    func resetDocument() {
+        // Limpiar cualquier estado relacionado antes de establecer nil
+        // Por ejemplo, si tienes páginas cargadas, texto extraído, etc.
+        pageCount = 0
+        // Finalmente establecer el documento como nil
+        pdfDocument = nil
+    }
+    
     
     func handleTransformProcess(
             document: PDFDocument,
@@ -70,6 +80,42 @@ class PDFViewModel: ObservableObject {
 
             return result.text.isEmpty ? "No se pudo extraer texto." : result.text
         }
+    
+    @MainActor
+    func saveFileWithPanel(content: String, alertMessage: Binding<String>, isSaving: Binding<Bool>) async {
+        isSaving.wrappedValue = true
+        defer { isSaving.wrappedValue = false }
+
+        let savePanel = NSSavePanel()
+        savePanel.allowedContentTypes = [UTType.plainText]
+        savePanel.canCreateDirectories = true
+        savePanel.title = "Guardar como"
+        
+        // Sugerir nombre basado en el PDF
+        let defaultName = (loadedPDFName as NSString).deletingPathExtension + "_transformado.txt"
+        savePanel.nameFieldStringValue = defaultName
+
+        // Usar última carpeta si está disponible
+        if let lastDir = UserDefaults.standard.url(forKey: "LastSaveDirectory") {
+            savePanel.directoryURL = lastDir
+        }
+
+        let response = savePanel.runModal()
+        if response == .OK, let url = savePanel.url {
+            do {
+                try content.write(to: url, atomically: true, encoding: .utf8)
+                alertMessage.wrappedValue = "Archivo guardado exitosamente en: \(url.path)"
+                
+                // Guardar la carpeta para futuras descargas
+                let folderURL = url.deletingLastPathComponent()
+                UserDefaults.standard.set(folderURL, forKey: "LastSaveDirectory")
+            } catch {
+                alertMessage.wrappedValue = "Error al guardar archivo: \(error.localizedDescription)"
+            }
+        } else {
+            alertMessage.wrappedValue = "Operación cancelada."
+        }
+    }
 
     
     
