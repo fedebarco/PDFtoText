@@ -10,14 +10,13 @@ import UniformTypeIdentifiers
 
 @main
 struct PDFtoTextApp: App {
-    @State private var isMainWindowVisible = true
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup {
-            if isMainWindowVisible {
-                ContentView()
-            }
-        }.commands {
+        WindowGroup{
+            ContentView()
+        }
+        .commands {
             CommandMenu("View") {
                 Button("Go to start"){
                     NotificationCenter.default.post(name: NSNotification.Name("GoStart"), object: nil)
@@ -30,6 +29,15 @@ struct PDFtoTextApp: App {
                 }
                 .keyboardShortcut("O", modifiers: .command)
             }
+            
         }
     }
 }
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
+
+
