@@ -10,7 +10,6 @@ import PDFKit
 
 struct PDFKitView: NSViewRepresentable {
     let document: PDFDocument
-
     func makeNSView(context: Context) -> PDFView {
         let pdfView = PDFView()
         pdfView.autoScales = true
@@ -26,6 +25,8 @@ struct PDFKitView: NSViewRepresentable {
 
 
 #Preview {
+    //Users/federico/Libarry?containers?co.federico.PDF/Data/tpm
+
     let pdfURL = PDFDocument(url:  FileManager.default.temporaryDirectory.appendingPathComponent("dic.pdf"))
     PDFKitView(document: pdfURL!)
 }

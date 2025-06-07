@@ -11,8 +11,9 @@ import UniformTypeIdentifiers
 import PDFKit
 
 struct PDFMainView: View {
-    @StateObject var pdfViewModel: PDFViewModel
-    @State var pdfDocument: PDFDocument
+    @State var pdfUrl: URL?
+    @StateObject var pdfViewModel: PDFViewModel = PDFViewModel()
+    @State var loadedPDFName: String = ""
     @State private var content: String = "Presiona el boton transformar y se obtiene el texto aquí..."
     @State private var alertMessage = ""
     @State private var isSaving = false
@@ -26,34 +27,33 @@ struct PDFMainView: View {
     private let maxConcurrentTasks = 4
     
     var body: some View {
+        
         VStack{
             HStack {
-                VStack {
-                    PDFKitView(document: pdfDocument)
-                        .onAppear {
-                            pdfViewModel.updatePageCount()
-                        }
-                    
-                    HStack {
-                        Text("PDF cargado: \(pdfViewModel.loadedPDFName)")
-                            .foregroundColor(.secondary)
+                if let pdfDocument = pdfViewModel.pdfDocument, pdfDocument.pageCount > 0 {
+                    VStack {
+                        PDFKitView(document: pdfDocument)
+                            .onAppear {
+                                //pdfViewModel.updatePageCount()
+                            }
                         
-                        Spacer()
-                        
-                        if pdfViewModel.pageCount > 0 {
-                            Text("\(pdfViewModel.pageCount) páginas")
+                        HStack {
+                            Text("PDF cargado: \(loadedPDFName)")
                                 .foregroundColor(.secondary)
+                            
+                            Spacer()
+                            
+                            if pdfDocument.pageCount > 0 {
+                                Text("\(pdfDocument.pageCount) páginas")
+                                    .foregroundColor(.secondary)
+                            }
                         }
-                        
-                        Spacer()
-                        
-                        Button("Cambiar PDF") {
-                            pdfViewModel.openPDFPicker()
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
+                        .padding()
                     }
-                    .padding()
+                } else {
+                    LoadPDFView{selectedURL in
+                        loadedPDFName = selectedURL.lastPathComponent
+                        pdfViewModel.loadPDF(from: selectedURL)}
                 }
                 VStack {
                     Button("Transformar") {
@@ -118,7 +118,7 @@ struct PDFMainView: View {
                         }
                         Button("Descargar TXT") {
                             Task{
-                                await pdfViewModel.saveFileWithPanel(content: content, alertMessage: $alertMessage, isSaving: $isSaving)
+                                await pdfViewModel.saveFileWithPanel(content: content, alertMessage: $alertMessage, isSaving: $isSaving, loadedPDFName: loadedPDFName)
                             }
                         }
                         .buttonStyle(.bordered)
@@ -128,12 +128,20 @@ struct PDFMainView: View {
             }
             Text("O usa ⌘+S para volver al inicio")
                 .foregroundColor(.secondary)
+        }.onAppear{
+            if let pdfURL = pdfUrl  {
+                pdfViewModel.loadPDF(from: pdfURL)
+                loadedPDFName = pdfURL.lastPathComponent
+            }
         }
     }
+    
 }
 
 
 #Preview {
+    //Users/federico/Libarry?containers?co.federico.PDF/Data/tpm
+    let pdfURL = FileManager.default.temporaryDirectory.appendingPathComponent("dic.pdf")
     
-    //PDFMainView()
+    PDFMainView(pdfUrl:pdfURL)
 }

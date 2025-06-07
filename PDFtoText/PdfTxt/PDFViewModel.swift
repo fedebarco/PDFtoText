@@ -13,13 +13,9 @@ import UniformTypeIdentifiers
 
 class PDFViewModel: ObservableObject {
     @Published var pdfDocument: PDFDocument?
-    @Published var loadedPDFName: String = ""
-    @Published var pageCount: Int = 0
     
     private let maxConcurrentTasks = 4
     private var textCache: [String: [Int: String]] = [:]
-        
-    func updatePageCount() {pageCount = pdfDocument?.pageCount ?? 0}
     
     func openPDFPicker() {
         let openPanel = NSOpenPanel()
@@ -34,7 +30,6 @@ class PDFViewModel: ObservableObject {
         if openPanel.runModal() == .OK {
             if let url = openPanel.url {
                 loadPDF(from: url)
-                loadedPDFName = url.lastPathComponent
             }
         }
     }
@@ -43,7 +38,7 @@ class PDFViewModel: ObservableObject {
         if let document = PDFDocument(url: url) {
             DispatchQueue.main.async {
                 self.pdfDocument = document
-                self.updatePageCount()
+                //self.updatePageCount()
             }
         }
     }
@@ -52,7 +47,7 @@ class PDFViewModel: ObservableObject {
     func resetDocument() {
         // Limpiar cualquier estado relacionado antes de establecer nil
         // Por ejemplo, si tienes páginas cargadas, texto extraído, etc.
-        pageCount = 0
+        //pageCount = 0
         // Finalmente establecer el documento como nil
         pdfDocument = nil
     }
@@ -82,7 +77,7 @@ class PDFViewModel: ObservableObject {
         }
     
     @MainActor
-    func saveFileWithPanel(content: String, alertMessage: Binding<String>, isSaving: Binding<Bool>) async {
+    func saveFileWithPanel(content: String, alertMessage: Binding<String>, isSaving: Binding<Bool>,loadedPDFName: String) async {
         isSaving.wrappedValue = true
         defer { isSaving.wrappedValue = false }
 
@@ -119,7 +114,7 @@ class PDFViewModel: ObservableObject {
 
     
     
-    func saveFileToDownloads(content: String, alertMessage: Binding<String>? = nil, isSaving: Binding<Bool>? = nil) async {
+    func saveFileToDownloads(content: String, alertMessage: Binding<String>? = nil, isSaving: Binding<Bool>? = nil, loadedPDFName: String) async {
         let fileManager = FileManager.default
         if let downloadsURL = fileManager.urls(for: .downloadsDirectory, in: .userDomainMask).first {
             let pdfName = loadedPDFName
